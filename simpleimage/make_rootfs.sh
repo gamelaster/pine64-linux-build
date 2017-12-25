@@ -60,7 +60,9 @@ if [ -n "$BOOT" ]; then
 	BOOT=$(readlink -f "$BOOT")
 fi
 
-TEMP=$(mktemp -d)
+#TEMP=$(mktemp -d)
+TEMP="../tmp"
+ARCHDIR="../arch"
 cleanup() {
 	if [ -e "$DEST/proc/cmdline" ]; then
 		umount "$DEST/proc"
@@ -150,44 +152,34 @@ case $DISTRO in
 		cp /etc/resolv.conf "$DEST/etc/resolv.conf"
 		sed -i 's|CheckSpace|#CheckSpace|' "$DEST/etc/pacman.conf"
 		cat >> "$DEST/etc/pacman.conf" <<EOF
-[archlinux-pine]
+[pine64-mainline]
 SigLevel = Never
-Server = https://github.com/anarsoul/PKGBUILDs/releases/download/current/
+Server = https://github.com/anarsoul/PKGBUILDs/releases/download/mainline/
 EOF
 		do_chroot pacman -Sy --noconfirm || true
 		# Cleanup preinstalled Kernel
 		do_chroot pacman -Rsn --noconfirm linux-aarch64 || true
-		# Remove files installed by make_simpleimage.sh
-		do_chroot rm -rf /boot/* || true
 		do_chroot pacman -Sy --noconfirm || true
+		do_chroot pacman -S --noconfirm dkms-rtl8723cs
 		do_chroot pacman -S --noconfirm --needed dosfstools curl xz iw rfkill netctl dialog wpa_supplicant \
-			     alsa-utils pv linux-pine64-bsp rtl8723ds_bt networkmanager || true
-		cat >> "$DEST/etc/NetworkManager/NetworkManager.conf" <<EOF
-[main]
-plugins=keyfile
+			     alsa-utils pv linux-pine64 linux-pine64-headers networkmanager || true
 
-[keyfile]
-unmanaged-devices=interface-name:p2p0
-EOF
-		do_chroot pacman -S --noconfirm uboot-$MODEL-bin
-		cp $PACKAGEDEB $DEST/$(basename $PACKAGEDEB)
-		do_chroot pacman -U --noconfirm $(basename $PACKAGEDEB)
-		do_chroot rm $(basename $PACKAGEDEB)
-		if [ "$MODEL" = "pinebook" ]; then
-			do_chroot systemctl enable pinebook-headphones
-		fi
-		do_chroot systemctl enable getty@tty1
+		cp $ARCHDIR/boot.scr $DEST/boot/
+		cp $ARCHDIR/boot-sd-arch.cmd $DEST/boot/
+		cp $ARCHDIR/asound.state $DEST/var/lib/alsa
+		cp $ARCHDIR/$MODEL/sunxi-spl.bin $DEST/boot/
+		cp $ARCHDIR/$MODEL/u-boot.itb $DEST/boot/
+
 		do_chroot systemctl enable NetworkManager
-		do_chroot systemd-machine-id-setup
 		case "$VARIANT" in
 			xfce)
-				do_chroot pacman -S --noconfirm xfce4 xf86-video-fbturbo-git lightdm lightdm-gtk-greeter \
-								firefox network-manager-applet xorg-server \
-								xf86-input-libinput firefox libvdpau-sunxi-git mpv blueman \
-								pulseaudio pulseaudio-alsa pavucontrol
-				do_chroot systemctl enable lightdm
+				do_chroot pacman -S --noconfirm xfce4 xorg-server xf86-input-libinput lxdm ttf-dejavu ttf-liberation firefox  \
+								pulseaudio networkmanager nm-connection-editor network-manager-applet \
+								xfce4-pulseaudio-plugin \
+								pulseaudio-alsa pavucontrol
+				do_chroot systemctl enable lxdm
 				do_chroot systemctl enable NetworkManager
-				do_chroot systemctl enable bluetooth
+				do_chroot usermod -a -G network,video,audio,optical,storage,input,scanner,games,lp alarm
 		esac
 		cat > "$DEST/second-phase" <<EOF
 #!/bin/sh
@@ -208,7 +200,6 @@ EOF
 		sed -i 's|#CheckSpace|CheckSpace|' "$DEST/etc/pacman.conf"
 		rm -f "$DEST/etc/resolv.conf"
 		mv "$DEST/etc/resolv.conf.dist" "$DEST/etc/resolv.conf"
-		mv "$DEST"/boot/* "$BOOT"/
 		;;
 	xenial|sid|jessie|stretch)
 		rm "$DEST/etc/resolv.conf"
@@ -316,7 +307,6 @@ mkdir -p "$DEST/usr"
 # Create fstab
 cat <<EOF > "$DEST/etc/fstab"
 # <file system>	<dir>	<type>	<options>			<dump>	<pass>
-/dev/mmcblk0p1	/boot	vfat	defaults			0		2
 /dev/mmcblk0p2	/	ext4	defaults,noatime		0		1
 EOF
 

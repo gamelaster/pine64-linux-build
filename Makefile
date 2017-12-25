@@ -221,6 +221,36 @@ archlinux-minimal-pinebook-$(RELEASE_NAME)-$(RELEASE).img: simple-image-pinebook
 		pinebook \
 		minimal
 
+archlinux-xfce-pine64-$(RELEASE_NAME)-$(RELEASE).img: simple-image-pine64-nokernel-$(RELEASE_NAME).img.xz linux-pine64-package-$(RELEASE_NAME).tar.xz boot-tools
+	sudo bash ./build-pine64-image.sh \
+		$(shell readlink -f $@) \
+		$(shell readlink -f $<) \
+		- \
+		$(shell readlink -f linux-pine64-package-$(RELEASE_NAME).tar.xz) \
+		arch \
+		pine64 \
+		xfce
+
+archlinux-xfce-sopine-$(RELEASE_NAME)-$(RELEASE).img: simple-image-sopine-nokernel-$(RELEASE_NAME).img.xz linux-pine64-package-$(RELEASE_NAME).tar.xz boot-tools
+	sudo bash ./build-pine64-image.sh \
+		$(shell readlink -f $@) \
+		$(shell readlink -f $<) \
+		- \
+		$(shell readlink -f linux-pine64-package-$(RELEASE_NAME).tar.xz) \
+		arch \
+		sopine \
+		xfce
+
+archlinux-xfce-pinebook-$(RELEASE_NAME)-$(RELEASE).img: simple-image-pinebook-nokernel-$(RELEASE_NAME).img.xz linux-pine64-package-$(RELEASE_NAME).tar.xz boot-tools
+	sudo bash ./build-pine64-image.sh \
+		$(shell readlink -f $@) \
+		$(shell readlink -f $<) \
+		- \
+		$(shell readlink -f linux-pine64-package-$(RELEASE_NAME).tar.xz) \
+		arch \
+		pinebook \
+		xfce
+
 .PHONY: kernel-tarball
 kernel-tarball: linux-pine64-$(RELEASE_NAME).tar.xz
 
@@ -261,10 +291,19 @@ linux-pine64: xenial-minimal-pine64
 linux-sopine: xenial-minimal-sopine
 
 .PHONY: archlinux-minimal-pine64
- archlinux-minimal-pine64: archlinux-minimal-pine64-$(RELEASE_NAME)-$(RELEASE).img.xz
+ archlinux-minimal-pine64: archlinux-minimal-pine64-$(RELEASE_NAME)-$(RELEASE).img
 
 .PHONY: archlinux-minimal-sopine
- archlinux-minimal-sopine: archlinux-minimal-sopine-$(RELEASE_NAME)-$(RELEASE).img.xz
+ archlinux-minimal-sopine: archlinux-minimal-sopine-$(RELEASE_NAME)-$(RELEASE).img
 
 .PHONY: archlinux-minimal-pinebook
- archlinux-minimal-pinebook: archlinux-minimal-pinebook-$(RELEASE_NAME)-$(RELEASE).img.xz
+ archlinux-minimal-pinebook: archlinux-minimal-pinebook-$(RELEASE_NAME)-$(RELEASE).img
+
+.PHONY: archlinux-xfce-pine64
+ archlinux-xfce-pine64: archlinux-xfce-pine64-$(RELEASE_NAME)-$(RELEASE).img
+
+.PHONY: archlinux-xfce-sopine
+ archlinux-xfce-sopine: archlinux-xfce-sopine-$(RELEASE_NAME)-$(RELEASE).img
+
+.PHONY: archlinux-xfce-pinebook
+ archlinux-xfce-pinebook: archlinux-xfce-pinebook-$(RELEASE_NAME)-$(RELEASE).img
