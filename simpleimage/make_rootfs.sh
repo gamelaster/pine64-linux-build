@@ -60,8 +60,7 @@ if [ -n "$BOOT" ]; then
 	BOOT=$(readlink -f "$BOOT")
 fi
 
-#TEMP=$(mktemp -d)
-TEMP="../tmp"
+TEMP=$(mktemp -d)
 ARCHDIR="../arch"
 cleanup() {
 	if [ -e "$DEST/proc/cmdline" ]; then
@@ -106,7 +105,7 @@ case $DISTRO in
 esac
 
 mkdir -p $BUILD
-TARBALL="$TEMP/$(basename $ROOTFS)"
+TARBALL="../tmp/$(basename $ROOTFS)"
 
 mkdir -p "$BUILD"
 if [ ! -e "$TARBALL" ]; then
@@ -160,15 +159,17 @@ EOF
 		# Cleanup preinstalled Kernel
 		do_chroot pacman -Rsn --noconfirm linux-aarch64 || true
 		do_chroot pacman -Sy --noconfirm || true
-		do_chroot pacman -S --noconfirm dkms-rtl8723cs
 		do_chroot pacman -S --noconfirm --needed dosfstools curl xz iw rfkill netctl dialog wpa_supplicant \
-			     alsa-utils pv linux-pine64 linux-pine64-headers networkmanager || true
+			     alsa-utils pv linux-pine64 linux-pine64-headers networkmanager dkms-rtl8723cs || true
 
 		cp $ARCHDIR/boot.scr $DEST/boot/
 		cp $ARCHDIR/boot-sd-arch.cmd $DEST/boot/
 		cp $ARCHDIR/asound.state $DEST/var/lib/alsa
 		cp $ARCHDIR/$MODEL/sunxi-spl.bin $DEST/boot/
 		cp $ARCHDIR/$MODEL/u-boot.itb $DEST/boot/
+		cp ../package/root/usr/local/sbin/pine64_first_boot.sh $DEST/usr/local/sbin/
+		cp ../package/root/usr/local/sbin/resize_rootfs.sh $DEST/usr/local/sbin/
+		cp ../package/root/etc/systemd/system/pine64-first-boot.service $DEST/etc/systemd/system/
 
 		do_chroot systemctl enable NetworkManager
 		case "$VARIANT" in
