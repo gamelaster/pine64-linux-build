@@ -13,7 +13,7 @@ DEVICE="/dev/mmcblk0"
 PART="2"
 
 resize() {
-	start=$(fdisk -l ${DEVICE}|grep ${DEVICE}p${PART}|awk '{print $2}')
+	start=$(fdisk -l ${DEVICE} | grep ${DEVICE}p${PART} | sed 's/*//' | awk '{print $2}')
 	echo $start
 
 	set +e
@@ -26,6 +26,8 @@ p
 2
 $start
 
+a
+2
 w
 EOF
 	set -e
