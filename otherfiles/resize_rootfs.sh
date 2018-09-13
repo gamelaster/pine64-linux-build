@@ -10,7 +10,7 @@ fi
 set -x
 
 DEVICE="/dev/mmcblk0"
-PART="2"
+PART="3"
 
 resize() {
 	start=$(fdisk -l ${DEVICE} | grep ${DEVICE}p${PART} | sed 's/*//' | awk '{print $2}')
@@ -20,14 +20,14 @@ resize() {
 	fdisk ${DEVICE} <<EOF
 p
 d
-2
+3
 n
 p
-2
+3
 $start
 
 a
-2
+3
 w
 EOF
 	set -e
