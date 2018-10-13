@@ -4,14 +4,14 @@ set -x
 set -e
 
 IMAGE_NAME="$1"
-IMAGE_SIZE=6144M
+IMAGE_SIZE=3000M
 PART_POSITION=20480 # K
 FAT_SIZE=100 #M
 SWAP_SIZE=2048 # M
 
 if [ -z "$IMAGE_NAME" ]; then
-	echo "Usage: $0 <image name>"
-	exit 1
+  echo "Usage: $0 <image name>"
+  exit 1
 fi
 
 fallocate -l $IMAGE_SIZE $IMAGE_NAME
