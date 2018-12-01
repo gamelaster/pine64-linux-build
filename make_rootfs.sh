@@ -8,6 +8,7 @@ DEST="$1"
 OUT_TARBALL="$2"
 DISTRO="$3"
 BUILD_ARCH=arm64
+VARIANT="$4"
 
 export LC_ALL=C
 
@@ -19,11 +20,6 @@ fi
 if [ "$(id -u)" -ne "0" ]; then
   echo "This script requires root."
   exit 1
-fi
-
-if [ ! -f "./configs/multistrap_$DISTRO.conf" ]; then
-    echo "Multi strap config \"multistrap_$DISTRO.conf\" not found!"
-    exit 1
 fi
 
 DEST=$(readlink -f "$DEST")
@@ -56,7 +52,12 @@ trap cleanup EXIT
 # Extract with BSD tar
 echo -n "Creating rootfs ... "
 set -x
-multistrap -a arm64 -d $DEST -f "./configs/multistrap_$DISTRO.conf"
+qemu-debootstrap \
+  --arch="${BUILD_ARCH}" \
+  --include="apt-transport-https,ca-certificates,curl,htop,locales,net-tools,openssh-server,usbutils" \
+  ${DISTRO} \
+  "${DEST}" \
+  http://ftp.debian.org/debian
 echo "OK"
 
 # Add qemu emulation.
@@ -84,13 +85,19 @@ cp /etc/resolv.conf "$DEST/etc/resolv.conf"
 #EOF
 #chmod a+x "$DEST/usr/sbin/policy-rc.d"
 
+cp $OTHERDIR/pine64_first_boot.sh $DEST/usr/bin/
+cp $OTHERDIR/resize_rootfs.sh $DEST/usr/bin/
+cp $OTHERDIR/pine64-first-boot.service $DEST/etc/systemd/system/
+
 cat > "$DEST/second-phase" <<EOF
 #!/bin/sh
 set -ex
+apt-get -y update
+apt-get -y install netbase net-tools ethtool udev iproute iputils-ping ifupdown isc-dhcp-client ssh ntp iw rfkill dialog locales adduser nano less wget dialog usbutils curl alsa-utils
+apt-get clean
 locale-gen en_US.UTF-8
 echo "root:toor" | chpasswd
-apt-get -y update
-apt-get clean
+systemctl enable pine64-first-boot.service
 EOF
 chmod +x "$DEST/second-phase"
 do_chroot /second-phase
@@ -116,13 +123,19 @@ ff02::1 ip6-allnodes
 ff02::2 ip6-allrouters
 EOF
 
+cat > "$DEST/etc/fstab" <<EOF
+# <file system> <dir> <type>  <options>     <dump>  <pass>
+/dev/mmcblk0p3  / ext4  defaults,noatime    0 1
+/dev/mmcblk0p2  none  swap  sw        0 0
+EOF
+
 mkdir "$DEST/lib/modules"
 # Install Kernel modules
 make -C ./build/linux/ ARCH=arm64 modules_install INSTALL_MOD_PATH="$DEST"
-# Install Kernel firmware
-make -C ./build/linux/ ARCH=arm64 firmware_install INSTALL_MOD_PATH="$DEST"
-# Install Kernel headers
-make -C ./build/linux/ ARCH=arm64 headers_install INSTALL_HDR_PATH="$DEST/usr"
+## Install Kernel firmware
+#make -C ./build/linux/ ARCH=arm64 firmware_install INSTALL_MOD_PATH="$DEST"
+## Install Kernel headers
+#make -C ./build/linux/ ARCH=arm64 headers_install INSTALL_HDR_PATH="$DEST/usr"
 
 
 # Final touches
@@ -132,9 +145,6 @@ rm "$DEST/etc/resolv.conf"
 #rm -f "$DEST/usr/sbin/policy-rc.d"
 
 #cp $OTHERDIR/asound.state $DEST/var/lib/alsa
-cp $OTHERDIR/pine64_first_boot.sh $DEST/usr/bin/
-cp $OTHERDIR/resize_rootfs.sh $DEST/usr/bin/
-cp $OTHERDIR/pine64-first-boot.service $DEST/etc/systemd/system/
 #cp $OTHERDIR/modesetting.conf $DEST/etc/X11/xorg.conf.d/
 #cp $OTHERDIR/sysrq.conf $DEST/etc/sysctl.d/
 

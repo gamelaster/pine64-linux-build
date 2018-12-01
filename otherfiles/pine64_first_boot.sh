@@ -6,5 +6,5 @@ mkdir -p /var/lib/pine64
 
 if [ ! -e /var/lib/pine64/resized ]; then
    touch /var/lib/pine64/resized
-   /usr/local/sbin/resize_rootfs.sh
+   /usr/bin/resize_rootfs.sh
 fi

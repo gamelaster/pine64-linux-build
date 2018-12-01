@@ -3,7 +3,7 @@
 set -e
 
 LINUX_REPO=https://github.com/anarsoul/linux-2.6/
-LINUX_REPO_BRANCH=sunxi64-4.18
+LINUX_REPO_BRANCH=sunxi64-4.19
 BUILD="build"
 MODEL="$1"
 

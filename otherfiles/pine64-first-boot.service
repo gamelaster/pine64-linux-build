@@ -4,7 +4,7 @@ After=systemd-modules-load.service local-fs.target
 
 [Service]
 Type=oneshot
-ExecStart=/usr/local/sbin/pine64_first_boot.sh
+ExecStart=/usr/bin/pine64_first_boot.sh
 
 [Install]
 WantedBy=multi-user.target

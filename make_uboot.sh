@@ -3,7 +3,8 @@
 set -e
 
 UBOOT_REPO=https://github.com/anarsoul/u-boot-pine64/
-UBOOT_REPO_BRANCH=pinebook-wip-20181012
+#UBOOT_REPO_BRANCH=pinebook-wip-20181012
+UBOOT_REPO_BRANCH=pinebook-wip-20181109
 ATF_REPO=https://github.com/apritzel/arm-trusted-firmware/
 ATF_REPO_BRANCH=allwinner
 MODEL="$1"
